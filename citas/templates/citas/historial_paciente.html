@@ -1,0 +1,152 @@
+{% load static %}
+<!doctype html>
+<html lang="en" class="layout-menu-fixed layout-compact" data-assets-path="{% static '' %}" data-template="vertical-menu-template-free">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>Salud total</title>
+  <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Core CSS -->
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
+
+  <!-- Helpers -->
+  <script src="{% static 'vendor/js/helpers.js' %}"></script>
+  <script src="{% static 'js/config.js' %}"></script>
+</head>
+<body>
+  <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+
+      <!-- Menu -->
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <div class="app-brand demo">
+          <a href="principal.html" class="app-brand-link">
+            <span class="app-brand-logo demo">
+              <span class="text-primary">
+                <!-- Logo SVG simplificado o removido si no es necesario -->
+                <svg width="25" viewBox="0 0 25 42" xmlns="http://www.w3.org/2000/svg"></svg>
+              </span>
+            </span>
+            <span class="app-brand-text demo menu-text fw-bold ms-2">Salud total</span>
+          </a>
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
+          </a>
+        </div>
+
+        <ul class="menu-inner py-1">
+          <li class="menu-item active open">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-home-smile"></i>
+              <div class="text-truncate">Menu</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="calificar" class="menu-link">
+                  <div class="text-truncate">Calificar cita</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="habilitar" class="menu-link">
+                  <div class="text-truncate">Habilitar hora</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="detalle" class="menu-link">
+                  <div class="text-truncate">Detalle de citas</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="historial" class="menu-link">
+                  <div class="text-truncate">Historial de citas</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </aside>
+      <div class="layout-page">
+                <!-- Content wrapper -->
+                <div class="content-wrapper">
+      <div class="container mt-5">
+          <div class="card shadow-lg">
+            <div class="card-body">
+      <div class="card">
+        <div class="card-header">
+            <h5>Ingrese el ID del Paciente</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{% url 'vista_historial_paciente' %}">
+                <div class="mb-3 row">
+                    <label for="id_paciente_form" class="col-sm-2 col-form-label">ID Paciente:</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" id="id_paciente_form" name="id_paciente_form" value="{{ paciente_id_buscado|default:'' }}">
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="submit" class="btn btn-primary">Buscar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+      <div class="card">
+          <div class="table-responsive text-nowrap">
+            {% if historial_con_citas %}
+            <div class="card-header">
+                <h5>Historial de Citas de: {{ paciente.nombre_completo }}</h5>
+            </div>
+              <table class="table">
+                                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha de Inicio de Consulta</th>
+                            <th>Estado de la Consulta</th>
+                        </tr>
+                    </thead>
+                  <tbody class="table-border-bottom-0">
+                    {% for item in historial_con_citas %}
+                    <tr>
+                        <td>{{ item.historial.fecha_de_inicio|date:"d/m/Y H:i"|default:"No especificada" }}</td>
+                        <td>{{ item.historial.estado_consulta|default:"N/A" }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+          <p class="no-historial">No hay registros en el historial de citas para este paciente.</p>
+        {% endif %}
+      </div>
+    </div>
+    <div class="layout-overlay layout-menu-toggle"></div>
+  </div>
+  <script src="../assets/vendor/libs/jquery/jquery.js"></script>
+        <script src="../assets/vendor/libs/popper/popper.js"></script>
+        <script src="../assets/vendor/js/bootstrap.js"></script>
+        <script src="../assets/vendor/js/menu.js"></script>
+
+        <!-- endbuild -->
+
+        <!-- Vendors JS -->
+
+        <!-- Main JS -->
+
+        <script src="../assets/js/main.js"></script>
+
+        <!-- Page JS -->
+
+        <!-- Place this tag before closing body tag for github widget button. -->
+        <script async defer src="https://buttons.github.io/buttons.js"></script>
+      
+</body>
+</html>

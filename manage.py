@@ -2,7 +2,13 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+import oracledb
 
+try:
+    oracledb.init_oracle_client()
+    print("Inicio modo thick")
+except Exception as e:
+    print("error: {e}")  
 
 def main():
     """Run administrative tasks."""

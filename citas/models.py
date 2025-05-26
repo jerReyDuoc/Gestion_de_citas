@@ -9,11 +9,21 @@ class Paciente(models.Model):
     def __str__(self):
         return self.nombre_completo
     
+    class Meta:
+        #managed = False
+        #db_table = 'Paciente'
+        pass
+    
 class Medico(models.Model):
     nombre_completo = models.CharField(max_length=200)
 
     def __str__(self):
         return self.nombre_completo
+    
+    class Meta:
+        #managed = False
+        #db_table = 'Medico'
+        pass
     
 class HistorialCita(models.Model):
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='historiales_cita')
@@ -27,8 +37,10 @@ class HistorialCita(models.Model):
         return f"Historial para {self.paciente} - Consulta iniciada: {self.fecha_de_inicio}"
 
     class Meta:
-        # db_table = 'Historial_Cita'
+        #managed = False
+        #db_table = 'Historial_Cita'
         pass
+
 
 class Cita(models.Model):
     # nombre Varchar2(60) - Nombre del paciente para citas sin login
@@ -90,10 +102,9 @@ class Cita(models.Model):
     
     class Meta:
         ordering = ['fecha_hora_cita']
-        # unique_together = ('medico', 'fecha_hora_cita') # Ya lo tenías, es bueno
+        #managed =  False
+        #db_table = 'CITA'
 
-        # Para cuando conectes a Oracle, si el nombre de la tabla es 'CITA'
-        # db_table = 'CITA'
         pass
 
 class Disponibilidad(models.Model):
@@ -117,7 +128,6 @@ class Disponibilidad(models.Model):
     class Meta:
         verbose_name_plural = "Disponibilidades"
         unique_together = ('medico', 'fecha', 'hora_inicio') # Un médico no puede tener el mismo slot de inicio dos veces
-        # Para cuando conectes a Oracle, si el nombre de la tabla es 'DISPONIBILIDAD'
-        # db_table = 'DISPONIBILIDAD'
-        # managed = False # Indicará a Django que no gestione la creación/modificación de esta tabla
+        #db_table = 'DISPONIBILIDAD'
+        #managed = False 
         pass

@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -76,21 +76,23 @@ WSGI_APPLICATION = 'modulo_citas.wsgi.application'
 
 DATABASES = {
         'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3', # BASE_DIR es la raíz de tu proyecto
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3', 
+            #'ENGINE': 'django.db.backends.oracle',
+            #'NAME': '(description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g47280ef313d67a_intplat_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))',
+            #'USER': 'application',         
+            #'PASSWORD': 'Integracion.1234567890',   
+            #'OPTIONS': {
+                #'config_dir':'C:/oracle/wallet',
+                #'wallet_location':'C:/oracle/wallet',
+                #'wallet_password': 'GEFtlkUG7J7zV7JJ6b',
+            #}
+        }
     }
-        #'ENGINE': 'django.db.backends.oracle',
-        #'NAME': 'intplat_low', # el nombre del servicio en tu tnsnames.ora
-        #'USER': 'application',         
-        #'PASSWORD': 'Integracion.1234567890',   
-        #'OPTIONS': {
-        #    'config_dir': 'C:/Users/jerso/Documents/Backend/Wallet_INTPLAT', # Directorio que contiene cwallet.sso
-        #    'wallet_location': 'C:/Users/jerso/Documents/Backend/Wallet_INTPLAT',
-        #    'wallet_password': 'GEFtlkUG7J7zV7JJ6b|',#  Si el wallet está protegido por contraseña
-        #}
-    
-}
-
+#'ENGINE': 'django.db.backends.sqlite3',
+#'NAME': BASE_DIR / 'db.sqlite3', # BASE_DIR es la raíz de tu proyecto
+#'wallet_password': 'GEFtlkUG7J7zV7JJ6b',
+# (description= (retry_count=20)(retry_delay=3)(address=(protocol=tcps)(port=1522)(host=adb.sa-santiago-1.oraclecloud.com))(connect_data=(service_name=g47280ef313d67a_intplat_high.adb.oraclecloud.com))(security=(ssl_server_dn_match=yes)))
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -128,7 +130,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'), 
+]
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
