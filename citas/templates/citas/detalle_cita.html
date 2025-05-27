@@ -6,24 +6,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
     <title>Citas Médicas | Admin</title>
-
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
-
-    <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Core CSS -->
   <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
-  <link rel="stylesheet" href="{% static 'css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
   <link rel="stylesheet" href="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
-
-  <!-- Page CSS -->
   <link rel="stylesheet" href="{% static 'vendor/libs/apex-charts/apex-charts.css' %}" />
-
-  <!-- Helpers -->
   <script src="{% static 'vendor/js/helpers.js' %}"></script>
   <script src="{% static 'js/config.js' %}"></script>
 </head>
@@ -57,6 +47,11 @@
               <div class="text-truncate">Menu</div>
             </a>
             <ul class="menu-sub">
+                <li class="menu-item active">
+                <a href="agendar" class="menu-link">
+                  <div class="text-truncate">Agendar cita</div>
+                </a>
+              </li>
               <li class="menu-item">
                 <a href="calificar" class="menu-link">
                   <div class="text-truncate">Calificar cita</div>
@@ -77,6 +72,11 @@
                   <div class="text-truncate">Historial de citas</div>
                 </a>
               </li>
+              <li class="menu-item">
+                <a href="listado" class="menu-link">
+                  <div class="text-truncate">Listado de citas</div>
+                </a>
+              </li>
             </ul>
           </li>
         </ul>
@@ -94,12 +94,16 @@
                         <nav class="navbar navbar-expand-lg mb-12">
                             <div class="container-fluid">
                                 <a class="navbar-brand" href="javascript:void(0)">Mis Citas</a>
-                                <form class="d-flex" onsubmit="return false">
-                                    <input class="form-control me-2 bg-white" type="search"
-                                        placeholder="Buscar por ID de cita..." aria-label="Buscar" />
-
-                                    <button class="btn btn-primary" type="button" type="button" data-bs-toggle="modal"
-                                        data-bs-target="#modalCita">Crear</button>
+                                <form method="GET" action="{% url 'detalle' %}">
+                                    <div class="mb-3 row">
+                                        <label for="id_cita_form" class="col-sm-2 col-form-label">ID Cita:</label>
+                                            <div class="col-sm-8">
+                                                <input type="text" class="form-control" id="id_cita_form" name="id_cita_form" value="{{ cita_id_buscada|default:'' }}">
+                                            </div>
+                                            <div class="col-sm-2">
+                                                <button type="submit" class="btn btn-primary">Buscar</button>
+                                            </div>
+                                        </div>
                                 </form>
                             </div>
                         </nav>
@@ -189,24 +193,70 @@
                             </div>
                         </div>
 
+                        {% if error_message %}
+                            <div class="alert alert-danger" role="alert">
+                                {{ error_message }}
+                            </div>
+                        {% endif %}
                         <!-- Tabla de citas -->
                         <div class="card">
                             <h5 class="card-header">Citas Médicas</h5>
+                            {% if cita %}
                             <div class="table-responsive text-nowrap">
-                                <table class="table">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>ID</th>
-                                            <th>Fecha de cita</th>
-                                            <th>Motivo</th>
-                                            <th>Especialidad</th>
-                                            <th>Médico</th>
-                                            <th>Estado</th>
-                                            <th>Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="table-border-bottom-0">
-                                    </tbody>
+                                <table class="table table-bordered table-striped">
+                                    <tbody>
+                            <tr>
+                                <th style="width: 30%;">Paciente (Temporal):</th>
+                                <td>{{ cita.nombre_paciente_temporal|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Médico:</th>
+                                <td>{{ cita.medico.nombre_completo|default:"N/A" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Fecha y Hora:</th>
+                                <td>{{ cita.fecha_hora_cita|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Duración:</th>
+                                <td>{{ cita.duracion_minutos }} minutos</td>
+                            </tr>
+                            <tr>
+                                <th>Motivo:</th>
+                                <td>{{ cita.motivo|default:"Sin motivo especificado" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Estado de la Cita:</th>
+                                <td>{{ cita.get_estado_display }}</td>
+                            </tr>
+                            <tr>
+                                <th>Estado de Verificación:</th>
+                                <td>{{ cita.get_pro_veri_cita_display|default:"N/A" }}</td>
+                            </tr>
+                            {% if cita.historial_cita %}
+                                <tr>
+                                    <th>Paciente Registrado (vía Historial):</th>
+                                    <td>{{ cita.historial_cita.paciente.nombre_completo|default:"N/A" }} (ID Historial: {{ cita.historial_cita.id }})</td>
+                                </tr>
+                                <tr>
+                                    <th>Estado Consulta (del Historial):</th>
+                                    <td>{{ cita.historial_cita.estado_consulta|default:"N/A" }}</td>
+                                </tr>
+                            {% else %}
+                                <tr>
+                                    <th>Historial Asociado:</th>
+                                    <td>No asociado a un historial de paciente registrado.</td>
+                                </tr>
+                            {% endif %}
+                            <tr>
+                                <th>Creado en:</th>
+                                <td>{{ cita.creado_en|date:"d/m/Y H:i:s" }}</td>
+                            </tr>
+                            <tr>
+                                <th>Actualizado en:</th>
+                                <td>{{ cita.actualizado_en|date:"d/m/Y H:i:s" }}</td>
+                            </tr>
+                        </tbody>
                                 </table>
                             </div>
                         </div>
@@ -219,17 +269,18 @@
                 </div>
                 <!-- / Layout page -->
             </div>
-
+            {% elif cita_id_buscada and not error_message %}
+            {% endif %}
             <!-- Overlay -->
             <div class="layout-overlay layout-menu-toggle"></div>
         </div>
         <!-- / Layout wrapper -->
         <!-- Core JS -->
 
-        <script src="../assets/vendor/libs/jquery/jquery.js"></script>
-        <script src="../assets/vendor/libs/popper/popper.js"></script>
-        <script src="../assets/vendor/js/bootstrap.js"></script>
-        <script src="../assets/vendor/js/menu.js"></script>
+        <script src="{% static 'vendor/libs/jquery/jquery.js' %}"></script>
+        <script src="{% static 'vendor/libs/popper/popper.js' %}"></script>
+        <script src="{% static 'vendor/js/bootstrap.js' %}"></script>
+        <script src="{% static 'vendor/js/menu.js' %}"></script>
 
         <!-- endbuild -->
 
@@ -237,193 +288,13 @@
 
         <!-- Main JS -->
 
-        <script src="../assets/js/main.js"></script>
+        <script src="{% static 'js/main.js' %}"></script>
 
         <!-- Page JS -->
 
         <!-- Place this tag before closing body tag for github widget button. -->
         <script async defer src="https://buttons.github.io/buttons.js"></script>
 
-
-        <script>
-            let modo = 'crear';
-            let filaEditando = null;
-            let idCita = 0;
-            let nombre = document.getElementById('nombre');
-            let rut = document.getElementById('rut');
-            let edad = document.getElementById('edad');
-            let genero = document.getElementById('genero');
-            let email = document.getElementById('email');
-            let fecha = document.getElementById('fecha');
-            let hora = document.getElementById('horaCita');
-            let btnGuardar = document.querySelector('.modal .btn.btn-primary');
-            let btnCancelar = document.querySelector('.btn.btn-label-secondary');
-            let tabla = document.querySelector('.table tbody');
-
-            btnGuardar.addEventListener('click', function () {
-                if (!nombre.value || !rut.value || !edad.value || !email.value || !fecha.value || !hora.value || genero.value === "Seleccionar...") {
-                    alert("Por favor completa todos los campos.");
-                    return;
-                }
-
-                if (modo === 'crear') {
-                    let fila = document.createElement('tr');
-                    fila.innerHTML = `
-                  <td><span>${idCita}</span></td>
-                  <td>${formatearFecha(fecha.value)} ${hora.value}</td>
-                  <td>No especificado</td>
-                  <td>General</td>
-                  <td class="datos-paciente"
-                      data-nombre="${nombre.value}"
-                      data-rut="${rut.value}"
-                      data-edad="${edad.value}"
-                      data-genero="${genero.value}"
-                      data-email="${email.value}">
-                    ${'No asignado'}<br>
-                  </td>
-                  <td>Pendiente</td>
-                  <td>
-                    <button class="btn-modificar btn btn-outline-warning">Modificar</button>
-                    <button class="btn-cancelar btn btn-outline-danger">Cancelar</button>
-                  </td>
-                `;
-
-                    // Esta data es la se envia desde el formulario hacia la API
-                    const apiData = {
-                        id: idCita,
-                        fecha: formatearFecha(fecha.value),
-                        hora: hora.value,
-                        motivo: "No especificado",
-                        especialidad: "General",
-                        nombre: nombre.value,
-                        rut: rut.value,
-                        edad: edad.value,
-                        genero: genero.value,
-                        email: email.value,
-                        estado: "Pendiente"
-                    }
-
-                    tabla.appendChild(fila);
-                    idCita++;
-                    alert("Cita creada con éxito");
-                }
-
-
-                if (modo === 'modificar' && filaEditando !== null) {
-                    const confirmarCita = confirm("¿Estás seguro de que deseas actualizar la hora de la cita?");
-
-                    if (!confirmarCita) {
-                        alert("No se realizaron cambios.");
-                        cerrarModal();
-                        return;
-                    }
-
-                    let celdaFecha = filaEditando.cells[1];
-                    let fechaTexto = formatearFecha(fecha.value);
-                    celdaFecha.textContent = fechaTexto + " " + hora.value;
-
-                    alert("Hora de cita actualizada");
-                }
-
-                resetearFormulario();
-                cerrarModal();
-            });
-
-            tabla.addEventListener('click', function (e) {
-                if (e.target.classList.contains('btn-modificar')) {
-                    let fila = e.target.closest('tr');
-                    let fechaHora = fila.cells[1].textContent.split(" ");
-                    let soloFecha = fechaHora[0];
-                    let soloHora = fechaHora[1];
-                    let celdaPaciente = fila.querySelector('.datos-paciente');
-
-                    nombre.value = celdaPaciente.getAttribute('data-nombre');
-                    rut.value = celdaPaciente.getAttribute('data-rut');
-                    edad.value = celdaPaciente.getAttribute('data-edad');
-                    genero.value = celdaPaciente.getAttribute('data-genero');
-                    email.value = celdaPaciente.getAttribute('data-email');
-                    fecha.value = invertirFecha(soloFecha);
-                    hora.value = soloHora;
-                    nombre.disabled = true;
-                    rut.disabled = true;
-                    edad.disabled = true;
-                    genero.disabled = true;
-                    email.disabled = true;
-                    fecha.disabled = true;
-                    hora.disabled = false;
-                    modo = 'modificar';
-                    filaEditando = fila;
-
-                    abrirModal();
-                }
-
-                if (e.target.classList.contains('btn-cancelar')) {
-                    let confirmar = confirm("¿Seguro que quieres cancelar esta cita?");
-                    if (confirmar) {
-                        e.target.closest('tr').remove();
-                        alert("Cita eliminada");
-                    }
-                }
-            });
-
-            btnCancelar.addEventListener('click', function () {
-                resetearFormulario();
-            });
-
-            function resetearFormulario() {
-                nombre.disabled = false;
-                rut.disabled = false;
-                edad.disabled = false;
-                genero.disabled = false;
-                email.disabled = false;
-                fecha.disabled = false;
-                hora.disabled = false;
-                nombre.value = "";
-                rut.value = "";
-                edad.value = "";
-                genero.value = "Seleccionar...";
-                email.value = "";
-                fecha.value = "";
-                hora.value = "";
-                modo = 'crear';
-                filaEditando = null;
-            }
-
-            function formatearFecha(f) {
-                let partes = f.split("-");
-                return partes[2] + "-" + partes[1] + "-" + partes[0];
-            }
-
-            function invertirFecha(f) {
-                let partes = f.split("-");
-                return partes[2] + "-" + partes[1] + "-" + partes[0];
-            }
-
-            function cerrarModal() {
-                let modal = bootstrap.Modal.getInstance(document.getElementById('modalCita'));
-                modal.hide();
-            }
-
-            function abrirModal() {
-                let modal = new bootstrap.Modal(document.getElementById('modalCita'));
-                modal.show();
-            }
-
-            let buscador = document.querySelector('.navbar input[type="search"]');
-            buscador.addEventListener('input', function () {
-                let texto = this.value.trim();
-                let filas = tabla.querySelectorAll('tr');
-
-                filas.forEach(fila => {
-                    let id = fila.querySelector('td span').textContent;
-                    if (texto === "" || id.includes(texto)) {
-                        fila.style.display = "";
-                    } else {
-                        fila.style.display = "none";
-                    }
-                });
-            });
-        </script>
 </body>
 
 </html>

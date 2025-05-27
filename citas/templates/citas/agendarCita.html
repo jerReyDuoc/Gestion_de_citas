@@ -1,0 +1,643 @@
+{% load static %}
+<!doctype html>
+<html lang="es" class="layout-menu-fixed layout-compact" data-assets-path="{% static '' %}" data-template="vertical-menu-template-free">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>Salud Total - Agendar Cita</title>
+  <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" integrity="sha256-..." crossorigin="anonymous" />
+  <style>
+    .form-label { font-weight: 500; }
+    .btn-agendar, .btn-validar { background-color: #34495E; color: white; }
+    .btn-agendar:hover, .btn-validar:hover { background-color: #2C3E50; }
+    .btn-imprimir { background-color: #4CAF50; color: white; }
+    .alert-error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+    #formulario-agendar, #formulario-validacion { display: none; }
+    #print-area { display: none; }
+    #calendar { 
+      max-width: 900px; 
+      margin: 20px auto; 
+      min-height: 400px; 
+    }
+    .modal-confirm { max-width: 400px; }
+    .card-header { background-color: #2C3E50; color: #fff; }
+    .card-header h2.card-title { color: #fff !important; }
+    #hora-display { 
+      border: 1px solid #34495E; 
+      border-radius: 4px; 
+      padding: 8px; 
+      background-color: #f8f9fa; 
+      width: 100%; 
+      color: #495057; 
+    }
+    .fc-event { 
+      cursor: pointer; 
+      font-size: 0.9em; 
+    }
+    .fc-event.available { 
+      background-color: #66BB6A !important; 
+      border-color: #4CAF50 !important; 
+    }
+    .fc-event.booked { 
+      background-color: #EF5350 !important; 
+      border-color: #D32F2F !important; 
+      cursor: not-allowed; 
+    }
+    .calendar-instruction { 
+      font-style: italic; 
+      color: #7f8c8d; 
+      margin-bottom: 10px; 
+    }
+    .fc .fc-button-primary {
+      background-color: #34495E;
+      border-color: #34495E;
+    }
+    .fc .fc-button-primary:hover {
+      background-color: #2C3E50;
+      border-color: #2C3E50;
+    }
+  </style>
+</head>
+<body>
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <div class="app-brand demo">
+          <a href="principal.html" class="app-brand-link">
+            <span class="app-brand-text demo menu-text fw-bold ms-2">Salud Total</span>
+          </a>
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
+          </a>
+        </div>
+        <ul class="menu-inner py-1">
+          <li class="menu-item active open">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-home-smile"></i>
+              <div class="text-truncate">Menú Paciente</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item active">
+                <a href="agendar" class="menu-link">
+                  <div class="text-truncate">Agendar cita</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="calificar" class="menu-link">
+                  <div class="text-truncate">Calificar cita</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="habilitar" class="menu-link">
+                  <div class="text-truncate">Habilitar hora</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="detalle" class="menu-link">
+                  <div class="text-truncate">Detalle de citas</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="historial" class="menu-link">
+                  <div class="text-truncate">Historial de citas</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="listado" class="menu-link">
+                  <div class="text-truncate">Listado de citas</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </aside>
+      <div class="layout-page">
+        <div class="container mt-5">
+          <div class="card shadow-lg">
+            <div class="card-header">
+              <h2 class="card-title text-center m-0">Agendar Cita</h2>
+            </div>
+            <div class="card-body">
+              <!-- Formulario de Validación -->
+              <form id="formulario-validacion" onsubmit="validarPaciente(event)">
+                <div class="mb-3">
+                  <label for="paciente-rut" class="form-label">RUT del Paciente (12345678-9)</label>
+                  <input type="text" id="paciente-rut" class="form-control" placeholder="Ej: 12345678-9" required aria-describedby="rutHelp" />
+                  <small id="rutHelp" class="form-text text-muted">Ingresa tu RUT con dígito verificador.</small>
+                </div>
+                <button type="submit" class="btn btn-validar w-100">Validar</button>
+              </form>
+              <!-- Formulario de Agendamiento -->
+              
+            <form id="formulario-agendar" onsubmit="agendarCita(event)">
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="paciente-nombre" class="form-label">Nombre</label>
+                    <input type="text" id="paciente-nombre" class="form-control" required />
+                  </div>
+                  <div class="col-md-6 mb-3">
+                      <label for="paciente-apellido" class="form-label">Apellido</label>
+                      <input type="text" id="paciente-apellido" class="form-control" required />
+                    </div>
+                  <div class="col-md-6 mb-3"> 
+                      <label for="paciente-rut" class="form-label">RUT</label>
+                      <input type="text" id="paciente-rut" class="form-control" />
+                  </div>
+                </div>
+                <div class="mb-3">
+                    <label for="medico" class="form-label">Médico</label>
+                    <select id="medico" class="form-select" required>
+                        <option value="" disabled selected>Cargando médicos...</option>
+                        {# Las opciones se llenarán con JavaScript #}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Fecha y Hora de la Cita</label>
+                    <div class="calendar-instruction mb-2">Selecciona un médico primero. Luego, haz clic en una hora disponible en el calendario.</div>
+                    <div id="calendar" style="min-height: 300px; border: 1px solid #ddd; padding: 10px;">
+                        <p id="calendar-placeholder">Selecciona un médico para ver su disponibilidad.</p>
+                    </div>
+                    <input type="text" id="hora-display" class="form-control mt-2" readonly placeholder="Hora seleccionada aparecerá aquí" required />
+                    <input type="hidden" id="fecha" name="fecha_cita_seleccionada" required />
+                    <input type="hidden" id="hora" name="hora_cita_seleccionada" required />
+                </div>
+                
+                <div class="mb-3">
+                    <label for="notas" class="form-label">Notas Adicionales (Motivo)</label>
+                    <textarea id="notas" class="form-control" rows="4" placeholder="Detalles o instrucciones adicionales"></textarea>
+                </div>
+                
+                <div id="mensaje-error" class="alert alert-danger d-none" role="alert"></div>
+                <div id="mensaje-exito" class="alert alert-success d-none" role="alert"></div>
+
+                <button type="submit" class="btn btn-primary w-100">Agendar Cita</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmModalLabel">Confirmación de Cita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="confirm-details">
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+              <!-- Modal de Confirmación -->
+              <div class="modal fade" id="confirmModal" tabindex="-1">
+                <div class="modal-dialog modal-confirm">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Cita Confirmada</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>Tu cita ha sido agendada correctamente.</p>
+                      <p id="confirm-details"></p>
+                    </div>
+                    <div class="modal-footer">
+                      <button class="btn btn-imprimir" onclick="imprimirCita()">Imprimir Cita</button>
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Mensaje de Error -->
+              <div id="mensaje-error" class="alert alert-error mt-3 d-none"></div>
+              <div id="print-area"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="../assets/vendor/js/menu.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js" integrity="sha256-..." crossorigin="anonymous"></script>
+  <script>
+    // Datos estáticos
+    let medicosData = []
+    let calendarioObj = null;
+
+    const URL_MEDICOS = "{% url 'medico-list' %}";
+    const URL_BASE_DISPONIBILIDAD = "/api/gestion-citas/medicos/"
+
+    let ultimaCitaAgendada = null;
+    let calendarioFullCalendar = null;
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    function validarRutChileno(rut) {
+      if (!/^\d{7,8}-[\dkK]$/.test(rut)) return false;
+      const [numero, dv] = rut.split('-');
+      let suma = 0;
+      let multiplo = 2;
+      for (let i = numero.length - 1; i >= 0; i--) {
+        suma += parseInt(numero[i]) * multiplo;
+        multiplo = multiplo === 7 ? 2 : multiplo + 1;
+      }
+      const dvEsperado = 11 - (suma % 11);
+      const dvFinal = dvEsperado === 11 ? '0' : dvEsperado === 10 ? 'K' : dvEsperado.toString();
+      return dvFinal.toUpperCase() === dv.toUpperCase();
+    }
+
+    function validarPaciente(event) {
+      event.preventDefault();
+      const rut = document.getElementById("paciente-rut").value;
+      const mensajeError = document.getElementById("mensaje-error");
+      mensajeError.classList.add("d-none");
+
+      if (!validarRutChileno(rut)) {
+        mensajeError.textContent = "El RUT no es válido.";
+        mensajeError.classList.remove("d-none");
+        return;
+      }
+
+      document.getElementById("formulario-validacion").style.display = "none";
+      document.getElementById("formulario-agendar").style.display = "block";
+      buscarPacientePorRut(rut);
+    }
+
+    function formatTimeTo12h(timeString) {
+      if (!timeString) return "";
+        const [hours, minutes] = timeString.split(':');
+        const h = parseInt(hours, 10);
+        const m = parseInt(minutes, 10);
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const formattedHours = h % 12 || 12;
+      return `${formattedHours}:${m < 10 ? '0' + m : m} ${ampm}`;
+    }
+
+    async function cargarMedicos() {
+            console.log("Iniciando cargarMedicos..."); // DEBUG
+        const medicoSelect = document.getElementById('medico');
+        medicoSelect.innerHTML = '<option value="" disabled selected>Cargando médicos...</option>'; // Mensaje inicial
+        medicoSelect.disabled = true;
+
+        try {
+            console.log("Haciendo fetch a:", URL_MEDICOS); // DEBUG
+            const response = await fetch(URL_MEDICOS);
+            console.log("Respuesta del fetch:", response); // DEBUG
+
+            if (!response.ok) {
+                // Intenta obtener más detalles del error si es posible
+                let errorMsg = `Error HTTP ${response.status}: ${response.statusText}`;
+                try {
+                    const errorBody = await response.text(); // O .json() si esperas JSON en errores
+                    console.error("Cuerpo del error:", errorBody);
+                    errorMsg += ` - ${errorBody}`;
+                } catch (e) { /* No hacer nada si el cuerpo no se puede leer */ }
+                throw new Error(errorMsg);
+            }
+            
+            medicosData = await response.json();
+            console.log("Médicos recibidos (medicosData):", medicosData); // DEBUG
+
+            if (!Array.isArray(medicosData)) {
+                throw new Error("La respuesta de la API de médicos no es un array.");
+            }
+
+            if (medicosData.length === 0) {
+                medicoSelect.innerHTML = '<option value="" disabled selected>No hay médicos disponibles</option>';
+                console.log("No se encontraron médicos."); // DEBUG
+                // No deshabilitar, podría querer reintentar o es un estado válido
+                // medicoSelect.disabled = true; 
+                return; // Salir si no hay médicos
+            }
+
+            medicoSelect.innerHTML = '<option value="" disabled selected>Selecciona un médico</option>'; // Resetear antes de llenar
+            medicosData.forEach(medico => {
+                console.log("Procesando médico para dropdown:", medico); // DEBUG
+                // Verifica aquí si medico.id_med, medico.nombre_completo, etc. existen y tienen valores
+                const idVal = medico.id_med !== undefined ? medico.id_med : medico.id; 
+                const nombreCompleto = medico.nombre_completo || `${medico.nombre || ''} ${medico.apellido || ''}`.trim();
+                const especialidad = medico.especialidad || 'N/A';
+                const displayText = `${nombreCompleto} - ${especialidad}`;
+
+                console.log("ID para value:", idVal);        // DEBUG
+                console.log("Texto para option:", displayText); // DEBUG
+                
+                medicoSelect.innerHTML += `<option value="${idVal}">${displayText}</option>`;
+            });
+            medicoSelect.disabled = false;
+            console.log("Dropdown de médicos poblado."); // DEBUG
+
+        } catch (error) {
+            console.error('Error en cargarMedicos:', error);
+            medicoSelect.innerHTML = '<option value="" disabled selected>Error al cargar médicos</option>';
+            medicoSelect.disabled = true;
+        }
+    }
+
+    function initializeCalendar() {
+        const calendarEl = document.getElementById("calendar");
+        const calendarPlaceholder = document.getElementById('calendar-placeholder');
+        if (!calendarEl) {
+            console.error("Elemento #calendar no encontrado.");
+            return;
+        }
+        const today = new Date().toISOString().split('T')[0];
+
+        if (calendarioFullCalendar) { 
+            calendarioFullCalendar.gotoDate(today);
+            return;
+        }
+
+        calendarioFullCalendar = new FullCalendar.Calendar(calendarEl, {
+            locale: 'es', 
+            initialView: 'timeGridWeek', 
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            slotMinTime: "08:00:00",
+            slotMaxTime: "20:00:00", 
+            slotDuration: "00:30:00", 
+            allDaySlot: false, 
+            initialDate: today,
+            selectable: false, 
+            
+            eventClick: function(info) {
+                if (info.event.extendedProps && info.event.extendedProps.isAvailableSlot) {
+                    const fechaSeleccionada = info.event.startStr.split("T")[0];
+                    const horaSeleccionada = info.event.startStr.split("T")[1].substring(0, 5); 
+
+                    document.getElementById("fecha").value = fechaSeleccionada;
+                    document.getElementById("hora").value = horaSeleccionada;
+                    document.getElementById("hora-display").value = `Cita para el ${fechaSeleccionada} a las ${formatTimeTo12h(horaSeleccionada)}`;
+                    
+                    console.log("Slot seleccionado:", fechaSeleccionada, horaSeleccionada);
+                } else {
+                    alert("Por favor, selecciona un horario marcado como 'Disponible'.");
+                }
+            },
+            datesSet: function(dateInfo) { 
+                const medicoId = document.getElementById("medico").value;
+                const fechaConsultaStr = dateInfo.view.currentStart.toISOString().split('T')[0];
+                
+                if (medicoId) {
+                    console.log(`datesSet: Cargando disponibilidad para médico ${medicoId}, fecha ${fechaConsultaStr}`);
+                    cargarDisponibilidadMedico(medicoId, fechaConsultaStr);
+                } else {
+                    if(calendarioFullCalendar) calendarioFullCalendar.removeAllEvents();
+                    calendarPlaceholder.textContent = "Selecciona un médico para ver su disponibilidad.";
+                    calendarPlaceholder.classList.remove('d-none');
+                }
+            }
+        });
+
+        calendarioFullCalendar.render();
+        calendarPlaceholder.textContent = "Selecciona un médico para ver su disponibilidad.";
+        calendarPlaceholder.classList.remove('d-none');
+        console.log("FullCalendar inicializado y renderizado.");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("formulario-validacion").style.display = "block";
+      document.getElementById("paciente-rut").addEventListener("blur", () => buscarPacientePorRut(document.getElementById("paciente-rut").value));
+      initializeCalendar();
+    });
+
+    async function cargarDisponibilidadMedico(medicoId, fechaConsultaStr /* YYYY-MM-DD */) {
+        const calendarPlaceholder = document.getElementById('calendar-placeholder');
+        
+        if (!medicoId) {
+            if (calendarioFullCalendar) calendarioFullCalendar.removeAllEvents();
+            calendarPlaceholder.textContent = "Selecciona un médico para ver su disponibilidad.";
+            calendarPlaceholder.classList.remove('d-none');
+            return;
+        }
+        if (!calendarioFullCalendar) {
+            console.error("El objeto Calendario no está inicializado para cargar eventos.");
+            return;
+        }
+
+        calendarPlaceholder.textContent = "Cargando disponibilidad...";
+        calendarPlaceholder.classList.remove('d-none');
+        calendarioFullCalendar.removeAllEvents(); 
+
+        try {
+            const urlDisponibilidad = `${URL_BASE_DISPONIBILIDAD}${medicoId}/disponibilidad/?fecha_consulta=${fechaConsultaStr}`;
+            console.log("FETCH: " + urlDisponibilidad);
+            const response = await fetch(urlDisponibilidad);
+            if (!response.ok) {
+                 const errorData = await response.text(); 
+                 throw new Error(`Error HTTP ${response.status}: ${response.statusText}. Detalle: ${errorData}`);
+            }
+            const slotsLibres = await response.json(); 
+
+            console.log("Slots libres recibidos para", fechaConsultaStr, ":", slotsLibres);
+
+            if (slotsLibres.length > 0) {
+                calendarPlaceholder.classList.add('d-none'); 
+                const eventos = slotsLibres.map(horaSlot => {
+                    const inicioDateTimeStr = `${fechaConsultaStr}T${horaSlot}:00`; 
+                    const finDateTime = new Date(new Date(inicioDateTimeStr).getTime() + 30 * 60000); 
+                    const finDateTimeStr = `${finDateTime.getFullYear()}-${String(finDateTime.getMonth() + 1).padStart(2, '0')}-${String(finDateTime.getDate()).padStart(2, '0')}T${String(finDateTime.getHours()).padStart(2, '0')}:${String(finDateTime.getMinutes()).padStart(2, '0')}:00`;
+
+
+                    return {
+                        title: 'Disponible', 
+                        start: inicioDateTimeStr,
+                        end: finDateTimeStr,
+                        display: 'block', 
+                        classNames: ['available-slot'], 
+                        extendedProps: {
+                            isAvailableSlot: true
+                        }
+                    };
+                });
+                calendarioFullCalendar.addEventSource(eventos);
+                console.log("Eventos de disponibilidad añadidos al calendario.");
+            } else {
+                calendarPlaceholder.textContent = "No hay horas disponibles para el médico en la fecha seleccionada.";
+                console.log("No hay slots disponibles.");
+            }
+        } catch (error) {
+            console.error('Error cargando disponibilidad:', error);
+            calendarPlaceholder.textContent = "Error al cargar disponibilidad. Intente más tarde.";
+        }
+    }
+
+    document.getElementById('medico').addEventListener('change', function() {
+        const medicoIdSeleccionado = this.value;
+        document.getElementById('fecha').value = ""; // Limpiar selección de cita previa
+        document.getElementById('hora').value = "";
+        document.getElementById('hora-display').value = "Selecciona una hora en el calendario";
+
+        if (medicoIdSeleccionado && calendarioFullCalendar) {
+            // Al cambiar de médico, obtener la fecha actual que está mostrando el calendario
+            const fechaActualCalendario = calendarioFullCalendar.getDate().toISOString().split('T')[0];
+            cargarDisponibilidadMedico(medicoIdSeleccionado, fechaActualCalendario);
+        } else if (calendarioFullCalendar) {
+            calendarioFullCalendar.removeAllEvents(); // Limpiar si no hay médico
+            document.getElementById('calendar-placeholder').textContent = "Selecciona un médico para ver su disponibilidad.";
+            document.getElementById('calendar-placeholder').classList.remove('d-none');
+        }
+    });
+
+    // --- Inicialización al Cargar la Página ---
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("DOM cargado. Inicializando...");
+        cargarMedicos(); // Carga los médicos en el dropdown
+        initializeCalendar(); // Inicializa la estructura del calendario FullCalendar
+        // La disponibilidad se cargará cuando se seleccione un médico o cambie la fecha del calendario
+    });
+
+  async function agendarCita(event) {
+        event.preventDefault();
+        const form = document.getElementById("formulario-agendar");
+        const mensajeError = document.getElementById("mensaje-error");
+        const mensajeExito = document.getElementById("mensaje-exito");
+
+        mensajeError.classList.add("d-none");
+        mensajeError.textContent = "";
+        if(mensajeExito) mensajeExito.classList.add("d-none");
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const rut = document.getElementById("paciente-rut").value;
+        const nombre = document.getElementById("paciente-nombre").value;
+        const apellido = document.getElementById("paciente-apellido").value;
+        const medicoId = document.getElementById("medico").value;
+        const notas = document.getElementById("notas").value;
+        const fecha = document.getElementById("fecha").value;
+        const hora = document.getElementById("hora").value;
+
+        if (!fecha || !hora) {
+            mensajeError.textContent = "Por favor, selecciona una fecha y hora del calendario.";
+            mensajeError.classList.remove("d-none");
+            return;
+        }
+
+        let fechaHoraCitaISO = `${fecha}T${hora.includes(':') && hora.split(':').length === 2 ? hora + ':00' : hora}`;
+        const nombreCompletoPaciente = `${rut ? 'RUT:'+rut+' ' : ''}${nombre} ${apellido}`.trim();
+
+        const citaData = {
+            nombre_paciente_temporal: nombreCompletoPaciente,
+            medico: parseInt(medicoId),
+            fecha_hora_cita: fechaHoraCitaISO,
+            motivo: notas,
+            // duracion_minutos: 30, // El backend usará el default si no se envía
+        };
+
+        console.log("Enviando al backend:", JSON.stringify(citaData));
+        
+        const apiUrlCitas = "{% url 'cita-list' %}"; // Nombre de la URL de DRF para la lista/creación de citas
+
+        try {
+            const response = await fetch(apiUrlCitas, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(citaData)
+            });
+
+            if (response.ok) {
+                const nuevaCita = await response.json();
+                console.log('Cita creada con éxito:', nuevaCita);
+                
+                const medicoSeleccionado = medicosData.find(m => m.id_med == medicoId); // Usar medicosData
+                const confirmDetails = document.getElementById("confirm-details");
+                if (confirmDetails && medicoSeleccionado) {
+                     confirmDetails.innerHTML = `
+                        <strong>Paciente:</strong> ${nombre} ${apellido} (RUT: ${rut || 'N/A'})<br>
+                        <strong>Médico:</strong> ${medicoSeleccionado.nombre_completo || (medicoSeleccionado.nombre + ' ' + medicoSeleccionado.apellido)} (${medicoSeleccionado.especialidad || 'N/A'})<br>
+                        <strong>Notas:</strong> ${notas || "Ninguna"}<br>
+                        <strong>Fecha:</strong> ${fecha}<br>
+                        <strong>Hora:</strong> ${formatTimeTo12h(hora)}
+                    `;
+                    const confirmModal = new bootstrap.Modal(document.getElementById("confirmModal"));
+                    confirmModal.show();
+                }
+                
+                if(mensajeExito) {
+                    mensajeExito.textContent = "¡Cita agendada con éxito!";
+                    mensajeExito.classList.remove("d-none");
+                }
+                form.reset();
+                document.getElementById("hora-display").value = "";
+                document.getElementById('calendar').innerHTML = ''; // Limpiar calendario
+                document.getElementById('calendar-placeholder').textContent = "Selecciona un médico para ver su disponibilidad.";
+                document.getElementById('calendar-placeholder').classList.remove('d-none');
+                // initializeCalendar(); // O tu función para reinicializar/actualizar el calendario
+            } else {
+                const errorData = await response.json();
+                console.error('Error del API:', errorData);
+                let errorMessageText = "Error al agendar la cita. ";
+                for (const key in errorData) {
+                    if (errorData.hasOwnProperty(key)) {
+                        errorMessageText += `${key}: ${errorData[key].join ? errorData[key].join(', ') : errorData[key]} `;
+                    }
+                }
+                mensajeError.textContent = errorMessageText.trim();
+                mensajeError.classList.remove("d-none");
+            }
+        } catch (error) {
+            console.error('Error en la petición fetch:', error);
+            mensajeError.textContent = "Ocurrió un error de red. Por favor, intente más tarde.";
+            mensajeError.classList.remove("d-none");
+        }
+    }
+
+    function imprimirCita() {
+      if (!ultimaCitaAgendada) return;
+      const { rut, nombre, apellido, medico, notas, fecha, hora } = ultimaCitaAgendada;
+      const printArea = document.getElementById("print-area");
+      printArea.innerHTML = `
+        <h2>Confirmación de Cita - Salud Total</h2>
+        <p><strong>RUT:</strong> ${rut}</p>
+        <p><strong>Paciente:</strong> ${nombre} ${apellido}</p>
+        <p><strong>Médico:</strong> ${medico.nombre} ${medico.apellido} (${medico.especialidad})</p>
+        <p><strong>Notas:</strong> ${notas || "Ninguna"}</p>
+        <p><strong>Fecha:</strong> ${fecha}</p>
+        <p><strong>Hora:</strong> ${formatTimeTo12h(hora)}</p>
+      `;
+      window.print();
+      printArea.innerHTML = "";
+    }
+  </script>
+</body>
+</html>

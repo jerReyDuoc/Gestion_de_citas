@@ -1,0 +1,658 @@
+{% load static %}
+<!doctype html>
+<html lang="es" class="layout-menu-fixed layout-compact" data-assets-path="{% static '' %}" data-template="vertical-menu-template-free">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>Salud Total - Listado de Citas</title>
+  <link rel="icon" type="image/x-icon" href="{% static 'img/favicon/favicon.ico' %}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/css/core.css' %}" />
+  <link rel="stylesheet" href="{% static 'vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" integrity="sha256-..." crossorigin="anonymous" />
+  <style>
+    .form-label { font-weight: 500; }
+    .btn-primary { background-color: #34495E; color: white; }
+    .btn-primary:hover { background-color: #2C3E50; }
+    .btn-agendar { background-color: #2C3E50; color: white; }
+    .btn-agendar:hover { background-color: #34495E; }
+    .btn-cancelar { background-color: #dc3545; color: white; }
+    .btn-cancelar:hover { background-color: #c82333; }
+    .badge.bg-success { background-color: #28a745 !important; }
+    .badge.bg-warning { background-color: #ffc107 !important; }
+    .badge.bg-danger { background-color: #dc3545 !important; }
+    .table-responsive { max-height: 500px; overflow-y: auto; }
+    .card-header { background-color: #2C3E50; color: #fff; }
+    .card-header .card-title { color: #fff !important; }
+    .modal-details { max-width: 500px; }
+    .filter-group { margin-bottom: 20px; }
+    .app-brand-text { color: #fff !important; }
+    .modal-backdrop { background-color: rgba(0, 0, 0, 0.5) !important; }
+    .modal-content { background-color: #fff !important; }
+  </style>
+</head>
+<body>
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <div class="app-brand demo">
+          <a href="principal.html" class="app-brand-link">
+            <span class="app-brand-text demo menu-text fw-bold ms-2">Salud Total</span>
+          </a>
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="bx bx-chevron-left d-block d-xl-none align-middle"></i>
+          </a>
+        </div>
+        <ul class="menu-inner py-1">
+          <li class="menu-item active open">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons bx bx-home-smile"></i>
+              <div class="text-truncate">Menú Paciente</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item active">
+                <a href="agendar-cita" class="menu-link">
+                  <div class="text-truncate">Agendar cita</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="calificar" class="menu-link">
+                  <div class="text-truncate">Calificar cita</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="habilitar" class="menu-link">
+                  <div class="text-truncate">Habilitar hora</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="detalle" class="menu-link">
+                  <div class="text-truncate">Detalle de citas</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="historial" class="menu-link">
+                  <div class="text-truncate">Historial de citas</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="listado" class="menu-link">
+                  <div class="text-truncate">Listado de citas</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </aside>
+      <div class="layout-page">
+        <div class="container-fluid">
+    <h4 class="fw-bold py-3 mb-4">
+        <span class="text-muted fw-light">Citas /</span> Gestionar Mis Citas
+    </h4>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h2 class="card-title text-left m-0" style="color: #fff !important;">Listado de Citas</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <label for="filtro-estado" class="form-label">Estado de la Cita</label>
+                    <select id="filtro-estado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        {% for valor, texto in estados_cita %}
+                        <option value="{{ valor }}">{{ texto }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 align-self-end">
+                    <button id="btn-aplicar-filtro" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h4 class="card-title text-left m-0" style="color: #fff !important;">Citas Encontradas</h4>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive text-nowrap">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID Cita</th>
+                            <th>Paciente</th>
+                            <th>Médico</th>
+                            <th>Fecha y Hora</th>
+                            <th>Duración (min)</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-citas-body">
+                        <tr><td colspan="7" class="text-center" id="citas-placeholder">Cargando citas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modificarCitaModal" tabindex="-1" aria-labelledby="modificarCitaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modificarCitaModalLabel">Modificar Fecha de Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Modificando cita para: <strong id="modal-paciente-nombre"></strong></p>
+                <p>Con Médico: <strong id="modal-medico-nombre"></strong> (ID: <span id="modal-medico-id-display"></span>)</p>
+                <input type="hidden" id="modal-cita-id">
+                <input type="hidden" id="modal-medico-id-hidden"> {# Para guardar el ID del médico de la cita actual #}
+                <input type="hidden" id="modal-duracion-cita">
+
+                <div class="mb-3">
+                    <label class="form-label">Nueva Fecha y Hora</label>
+                    <div id="calendarModal" style="min-height: 300px; border: 1px solid #ddd; padding: 10px;">
+                        <p id="calendarModal-placeholder">Cargando disponibilidad...</p>
+                    </div>
+                    <input type="text" id="horaDisplayModal" class="form-control mt-2" readonly placeholder="Selecciona una nueva hora en el calendario" />
+                    <input type="hidden" id="fechaModal" />
+                    <input type="hidden" id="horaModal" />
+                </div>
+                <div id="modal-mensaje-error" class="alert alert-danger d-none" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" id="btn-guardar-modificacion-cita">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+</div>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+  <script src="../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="../assets/vendor/js/menu.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js" integrity="sha256-..." crossorigin="anonymous"></script>
+  <script>
+    
+    const URL_CITAS_API = "{% url 'cita-list' %}";
+    const URL_BASE_DISPONIBILIDAD_MEDICO_API = "/api/gestion-citas/medicos/"; // Se completará con /id/disponibilidad/
+
+    // Instancia del calendario del modal
+    let calendarioModalObj = null;
+    let bootstrapModalInstance = null; // Para manejar la instancia del modal de Bootstrap
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function formatDateTimeForDisplay(isoString) {
+        if (!isoString) return "N/A";
+        try {
+            const date = new Date(isoString);
+            return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        } catch (e) { return isoString; }
+    }
+
+    function formatTimeTo12h(timeString) {
+        if (!timeString) return "";
+        try {
+            const [hours, minutes] = timeString.split(':');
+            const h = parseInt(hours, 10);
+            const m = parseInt(minutes, 10);
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const formattedHours = h % 12 || 12; 
+            return `${formattedHours}:${m < 10 ? '0' + m : m} ${ampm}`;
+        } catch (e) { return timeString; }
+    }
+
+    async function cargarCitas(estado = '') {
+        console.log("CARGAR_CITAS: Iniciando carga de citas. Filtro estado:", estado || "Todos");
+        const tbody = document.getElementById('tabla-citas-body');
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center" id="citas-placeholder">Cargando citas...</td></tr>`;
+        let url = URL_CITAS_API;
+        if (estado) {
+            url += `?estado=${estado}`;
+        }
+
+        try {
+            const response = await fetch(url);
+            console.log("CARGAR_CITAS: Respuesta de API citas:", response);
+            if (!response.ok) throw new Error(`Error HTTP ${response.status} obteniendo citas.`);
+            const citas = await response.json();
+            console.log("CARGAR_CITAS: Citas recibidas:", citas);
+
+            if (!citas || citas.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center">No se encontraron citas ${estado ? 'con el estado seleccionado' : ''}.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = ''; 
+            citas.forEach(cita => {
+                console.log("CARGAR_CITAS: Procesando cita para tabla:", cita);
+                console.log("CARGAR_CITAS: cita.medico_id_val =", cita.medico_id_val, "(Tipo:", typeof cita.medico_id_val + ")");
+
+                const fila = `
+                    <tr>
+                        <td>${cita.id}</td>
+                        <td>${cita.nombre_paciente_temporal || 'N/A'}</td>
+                        <td>${cita.medico_nombre || 'N/A'}</td>
+                        <td>${formatDateTimeForDisplay(cita.fecha_hora_cita)}</td>
+                        <td>${cita.duracion_minutos}</td>
+                        <td><span class="badge bg-label-${cita.estado === 'CANCELADA' ? 'danger' : (cita.estado === 'COMPLETADA' ? 'success' : 'info')} me-1">${cita.estado_display || cita.estado}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-info btn-modificar-cita" 
+                                    data-id="${cita.id}" 
+                                    data-medico-id="${cita.medico_id_val}" 
+                                    data-medico-nombre="${cita.medico_nombre || ''}" 
+                                    data-paciente-nombre="${cita.nombre_paciente_temporal || 'N/A'}" 
+                                    data-duracion="${cita.duracion_minutos}"
+                                    data-fecha-cita-original="${cita.fecha_hora_cita}"
+                                    title="Modificar Fecha">
+                                <i class="bx bx-edit-alt"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger btn-eliminar-cita" data-id="${cita.id}" title="Cancelar Cita">
+                                <i class="bx bx-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += fila;
+            });
+
+            document.querySelectorAll('.btn-modificar-cita').forEach(btn => {
+                btn.addEventListener('click', abrirModalModificar);
+            });
+            document.querySelectorAll('.btn-eliminar-cita').forEach(btn => {
+                btn.addEventListener('click', confirmarEliminarCita);
+            });
+            console.log("CARGAR_CITAS: Event listeners para modificar/eliminar añadidos.");
+        } catch (error) {
+            console.error("CARGAR_CITAS: Error cargando citas:", error);
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error al cargar citas. Ver consola.</td></tr>`;
+        }
+    }
+
+    function inicializarCalendarioModal(medicoIdParaCalendario, fechaInicialStr) {
+        const calendarElModal = document.getElementById("calendarModal");
+        const placeholderModal = document.getElementById('calendarModal-placeholder');
+        console.log(`MODAL_CAL_INIT: Para MedicoID=${medicoIdParaCalendario}, FechaInicial=${fechaInicialStr}`);
+
+        if (!calendarElModal) {
+            console.error("MODAL_CAL_INIT: Elemento #calendarModal no encontrado.");
+            return;
+        }
+        if (!placeholderModal) {
+            console.error("MODAL_CAL_INIT: Elemento #calendarModal-placeholder no encontrado.");
+            return; // Salir si el placeholder no existe
+        }
+        
+        if (calendarioModalObj) {
+            console.log("MODAL_CAL_INIT: Destruyendo calendario modal anterior.");
+            calendarioModalObj.destroy();
+        }
+        
+        placeholderModal.textContent = "Cargando disponibilidad...";
+        placeholderModal.classList.remove('d-none');
+        // No limpiar calendarElModal.innerHTML aquí, FullCalendar lo maneja.
+
+        calendarioModalObj = new FullCalendar.Calendar(calendarElModal, {
+            locale: 'es',
+            initialView: 'timeGridWeek',
+            initialDate: fechaInicialStr,
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,timeGridDay' },
+            slotMinTime: "08:00:00", slotMaxTime: "20:00:00", slotDuration: "00:30:00", allDaySlot: false,
+            eventClick: function(info) {
+                 if (info.event.extendedProps && info.event.extendedProps.isAvailableSlot) {
+                    const fechaSel = info.event.startStr.split("T")[0];
+                    const horaSel = info.event.startStr.split("T")[1].substring(0, 5);
+                    document.getElementById("fechaModal").value = fechaSel;
+                    document.getElementById("horaModal").value = horaSel;
+                    document.getElementById("horaDisplayModal").value = `Nueva fecha: ${fechaSel} a las ${formatTimeTo12h(horaSel)}`;
+                    console.log("MODAL_CAL_INIT: Slot seleccionado:", fechaSel, horaSel);
+                } else {
+                    alert("Por favor, selecciona un horario marcado como 'Disponible'.");
+                }
+            },
+            datesSet: function(dateInfo) {
+                const fechaConsulta = dateInfo.view.activeStart.toISOString().split('T')[0];
+                console.log(`MODAL_CAL_INIT datesSet: MedicoID=${medicoIdParaCalendario}, Fecha=${fechaConsulta}`);
+                if(medicoIdParaCalendario) {
+                    cargarDisponibilidadMedicoModal(medicoIdParaCalendario, fechaConsulta);
+                } else {
+                     if(calendarioModalObj) calendarioModalObj.removeAllEvents();
+                     if(placeholderModal) placeholderModal.textContent = "Médico no especificado para cargar disponibilidad.";
+                     if(placeholderModal) placeholderModal.classList.remove('d-none');
+                }
+            }
+        });
+        calendarioModalObj.render();
+        console.log("MODAL_CAL_INIT: FullCalendar del modal renderizado.");
+
+        if(medicoIdParaCalendario && fechaInicialStr) { // fechaInicialStr también debe ser válida
+             console.log(`MODAL_CAL_INIT: Cargando disponibilidad inicial para MedicoID=${medicoIdParaCalendario}, Fecha=${fechaInicialStr}`);
+             cargarDisponibilidadMedicoModal(medicoIdParaCalendario, fechaInicialStr);
+        } else {
+            if(placeholderModal) placeholderModal.textContent = "Seleccione un médico y fecha.";
+            console.warn("MODAL_CAL_INIT: No se cargó disponibilidad inicial, medicoId o fechaInicial faltantes/inválidos.", medicoIdParaCalendario, fechaInicialStr);
+        }
+    }
+
+    async function cargarDisponibilidadMedicoModal(medicoId, fechaConsultaStr) {
+        const placeholderModal = document.getElementById('calendarModal-placeholder');
+        console.log(`MODAL_LOAD_DISP: Llamado con MedicoID=${medicoId}, Fecha=${fechaConsultaStr}`);
+
+        if (!placeholderModal) { console.error("MODAL_LOAD_DISP: #calendarModal-placeholder no existe!"); return; }
+        if (!medicoId || medicoId === "undefined" || medicoId === "null") { 
+            if (calendarioModalObj) calendarioModalObj.removeAllEvents();
+            placeholderModal.textContent = "Médico no válido para cargar disponibilidad.";
+            placeholderModal.classList.remove('d-none');
+            console.log("MODAL_LOAD_DISP: medicoId inválido:", medicoId);
+            return;
+        }
+        // ... (resto de la función como la tenías, con los console.log que ya estaban)
+        if (!fechaConsultaStr) { /* ... */ console.log("MODAL_LOAD_DISP: No hay fechaConsultaStr."); return; }
+        if (!calendarioModalObj) { console.error("MODAL_LOAD_DISP: calendarioModalObj no inicializado."); return; }
+
+        placeholderModal.textContent = "Cargando disponibilidad...";
+        placeholderModal.classList.remove('d-none');
+        calendarioModalObj.removeAllEvents();
+
+        try {
+            const urlDisponibilidad = `${URL_BASE_DISPONIBILIDAD_MEDICO_API}${medicoId}/disponibilidad/?fecha_consulta=${fechaConsultaStr}`;
+            console.log("MODAL_LOAD_DISP: Fetching desde", urlDisponibilidad);
+            const response = await fetch(urlDisponibilidad);
+            console.log("MODAL_LOAD_DISP: Respuesta del fetch", response);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error HTTP ${response.status}: ${response.statusText}. Detalle: ${errorText}`);
+            }
+            
+            const slotsLibres = await response.json();
+            console.log(`MODAL_LOAD_DISP: Slots libres recibidos para ${fechaConsultaStr}:`, slotsLibres);
+
+            if (slotsLibres && Array.isArray(slotsLibres) && slotsLibres.length > 0) {
+                const eventosParaCalendario = slotsLibres.map(horaSlot => {
+                    const horaFormateada = horaSlot.includes(':') && horaSlot.split(':').length === 2 ? horaSlot + ':00' : '00:00:00';
+                    const inicioDateTimeStr = `${fechaConsultaStr}T${horaFormateada}`;
+                    let finDateTimeStr;
+                    try {
+                        const inicioDT = new Date(inicioDateTimeStr);
+                        if (isNaN(inicioDT.getTime())) {
+                            console.error(`MODAL_LOAD_DISP: Fecha de inicio inválida para slot: ${inicioDateTimeStr}`);
+                            return null; 
+                        }
+                        const finDateTime = new Date(inicioDT.getTime() + 30 * 60000); 
+                        finDateTimeStr = `${finDateTime.getFullYear()}-${String(finDateTime.getMonth() + 1).padStart(2, '0')}-${String(finDateTime.getDate()).padStart(2, '0')}T${String(finDateTime.getHours()).padStart(2, '0')}:${String(finDateTime.getMinutes()).padStart(2, '0')}:00`;
+                    } catch(e) {
+                        console.error(`MODAL_LOAD_DISP: Error procesando fecha/hora para slot: ${horaSlot}`, e);
+                        return null;
+                    }
+                    if (!finDateTimeStr) return null;
+                    return { title: 'Disponible', start: inicioDateTimeStr, end: finDateTimeStr, classNames: ['available-slot'], backgroundColor: 'green', borderColor: 'green', extendedProps: { isAvailableSlot: true } };
+                }).filter(evento => evento !== null);
+
+                console.log("MODAL_LOAD_DISP: Eventos procesados para FullCalendar modal:", eventosParaCalendario);
+                if (eventosParaCalendario.length > 0) {
+                    calendarioModalObj.addEventSource(eventosParaCalendario);
+                    placeholderModal.classList.add('d-none');
+                    console.log("MODAL_LOAD_DISP: EventSource añadido al calendario modal.");
+                } else {
+                    placeholderModal.textContent = "No hay slots válidos procesados para mostrar.";
+                }
+            } else {
+                placeholderModal.textContent = "No hay horas disponibles para el médico en la fecha seleccionada.";
+            }
+        } catch (error) {
+            console.error('MODAL_LOAD_DISP: Error al cargar/procesar disponibilidad:', error);
+            placeholderModal.textContent = "Error al cargar disponibilidad modal. Revise la consola.";
+        }
+    }
+
+
+    function abrirModalModificar(event) {
+        console.log("ABRIR_MODAL: Función abrirModalModificar llamada.");
+        const button = event.currentTarget;
+        const citaId = button.dataset.id;
+        const medicoId = button.dataset.medicoId; // Esto viene de data-medico-id
+        const medicoNombre = button.dataset.medicoNombre;
+        const pacienteNombre = button.dataset.pacienteNombre;
+        const duracionCita = parseInt(button.dataset.duracion) || 30;
+        const fechaCitaOriginal = button.dataset.fechaCitaOriginal; // Ej: "2025-11-15T10:00:00Z"
+
+        console.log("ABRIR_MODAL: Datos del botón:", { citaId, medicoId, medicoNombre, pacienteNombre, duracionCita, fechaCitaOriginal });
+
+        if (!medicoId || medicoId === "undefined" || medicoId === "null") { // Chequeo más robusto
+            console.error("ABRIR_MODAL: medicoId es inválido:", medicoId, ". No se puede cargar disponibilidad.");
+            alert("Error: No se pudo obtener la información del médico para esta cita.");
+            return;
+        }
+        
+        document.getElementById('modal-cita-id').value = citaId;
+        document.getElementById('modal-medico-id-hidden').value = medicoId;
+        document.getElementById('modal-duracion-cita').value = duracionCita;
+        document.getElementById('modal-paciente-nombre').textContent = pacienteNombre;
+        document.getElementById('modal-medico-nombre').textContent = medicoNombre;
+        document.getElementById('modal-medico-id-display').textContent = medicoId;
+        
+        document.getElementById('fechaModal').value = '';
+        document.getElementById('horaModal').value = '';
+        document.getElementById('horaDisplayModal').value = 'Selecciona una nueva hora en el calendario';
+        const errorDivModal = document.getElementById('modal-mensaje-error');
+        if(errorDivModal) {
+             errorDivModal.classList.add('d-none');
+             errorDivModal.textContent = '';
+        }
+
+        const fechaParaCalendario = fechaCitaOriginal ? fechaCitaOriginal.split('T')[0] : new Date().toISOString().split('T')[0];
+        console.log(`ABRIR_MODAL: Llamando a inicializarCalendarioModal con medicoId: ${medicoId}, fechaInicial: ${fechaParaCalendario}`);
+        inicializarCalendarioModal(medicoId, fechaParaCalendario);
+        
+        if (!bootstrapModalInstance) {
+            const modalElement = document.getElementById('modificarCitaModal');
+            if (modalElement) {
+                bootstrapModalInstance = new bootstrap.Modal(modalElement);
+            } else {
+                console.error("ABRIR_MODAL: Elemento del modal con ID 'modificarCitaModal' no encontrado.");
+                return;
+            }
+        }
+        if (bootstrapModalInstance) {
+            console.log("ABRIR_MODAL: Mostrando modal.");
+            bootstrapModalInstance.show();
+        }
+    }
+
+    async function guardarModificacionCita() { console.log("GUARDAR_MODAL: Botón 'Guardar Cambios' presionado.");
+
+    const citaId = document.getElementById('modal-cita-id').value;
+    const fechaNueva = document.getElementById('fechaModal').value;
+    const horaNueva = document.getElementById('horaModal').value;
+    const errorDivModal = document.getElementById('modal-mensaje-error');
+
+    console.log("GUARDAR_MODAL: Datos leídos del modal:", { citaId, fechaNueva, horaNueva });
+
+    if(errorDivModal) {
+        errorDivModal.classList.add('d-none'); // Ocultar mensajes de error anteriores
+        errorDivModal.textContent = '';
+    } else {
+        console.error("GUARDAR_MODAL: Elemento #modal-mensaje-error no encontrado en el DOM.");
+    }
+
+    if (!citaId) {
+        const msg = "Error: No se pudo obtener el ID de la cita a modificar.";
+        console.error("GUARDAR_MODAL:", msg);
+        if(errorDivModal) { errorDivModal.textContent = msg; errorDivModal.classList.remove('d-none'); } 
+        else { alert(msg); }
+        return;
+    }
+
+    if (!fechaNueva || !horaNueva) {
+        const msg = "Por favor, selecciona una nueva fecha y hora del calendario del modal.";
+        console.warn("GUARDAR_MODAL: Validación fallida -", msg);
+        if(errorDivModal) {
+            errorDivModal.textContent = msg;
+            errorDivModal.classList.remove('d-none');
+        } else {
+            alert(msg);
+        }
+        return;
+    }
+
+    // Construir la fecha en formato ISO.
+    const horaCompletaNueva = horaNueva.includes(':') && horaNueva.split(':').length === 2 ? horaNueva + ':00' : horaNueva;
+    const nuevaFechaHoraISO = `${fechaNueva}T${horaCompletaNueva}`;
+    console.log("GUARDAR_MODAL: Nueva fechaISO a enviar:", nuevaFechaHoraISO, "para Cita ID:", citaId);
+
+    const payload = {
+        fecha_hora_cita: nuevaFechaHoraISO
+        // Si permitieras cambiar otros campos (ej. motivo, duración), los añadirías aquí.
+        // El backend usará el médico y duración existentes si solo se envía la fecha/hora,
+        // pero las validaciones de disponibilidad y anti-colisión se ejecutarán con la nueva fecha/hora.
+    };
+
+    try {
+        console.log("GUARDAR_MODAL: Enviando PATCH a:", `${URL_CITAS_API}${citaId}/`);
+        const response = await fetch(`${URL_CITAS_API}${citaId}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        console.log("GUARDAR_MODAL: Respuesta del PATCH:", response);
+
+        if (response.ok) {
+            console.log("GUARDAR_MODAL: Cita modificada OK.");
+            if (bootstrapModalInstance) {
+                bootstrapModalInstance.hide();
+            } else {
+                 const modalElem = document.getElementById('modificarCitaModal');
+                 if (modalElem) { // Verificar que el elemento exista
+                    const modal = bootstrap.Modal.getInstance(modalElem);
+                    if (modal) modal.hide();
+                 }
+            }
+            cargarCitas(document.getElementById('filtro-estado').value); 
+            alert("Cita modificada exitosamente.");
+        } else {
+            const errorData = await response.json();
+            console.error("GUARDAR_MODAL: Error del API al modificar:", errorData);
+            let errMsg = "Error al modificar la cita. ";
+            for (const key in errorData) {
+                if (errorData.hasOwnProperty(key)) {
+                    // DRF suele devolver errores en un array por campo, o non_field_errors
+                    const errorMessages = Array.isArray(errorData[key]) ? errorData[key].join(', ') : errorData[key];
+                    errMsg += `${key === 'non_field_errors' ? '' : key + ': '}${errorMessages} `;
+                }
+            }
+            if(errorDivModal) {
+                errorDivModal.textContent = errMsg.trim();
+                errorDivModal.classList.remove('d-none');
+            } else {
+                alert(errMsg.trim());
+            }
+        }
+    } catch (error) {
+        console.error("GUARDAR_MODAL: Error de red/JS al guardar modificación:", error);
+        if(errorDivModal) {
+            errorDivModal.textContent = "Error de red al intentar modificar la cita.";
+            errorDivModal.classList.remove('d-none');
+        } else {
+            alert("Error de red al intentar modificar la cita.");
+        }
+    }
+}
+    document.getElementById('btn-guardar-modificacion-cita').addEventListener('click', guardarModificacionCita);
+
+    async function confirmarEliminarCita(event) { 
+    const button = event.currentTarget;
+    const citaId = button.dataset.id;
+    console.log(`CONFIRMAR_ELIMINAR: Clic en cancelar para cita ID ${citaId}`);
+
+    if (!citaId) {
+        console.error("CONFIRMAR_ELIMINAR: No se pudo obtener el ID de la cita del botón.");
+        alert("Error: No se pudo identificar la cita a cancelar.");
+        return;
+    }
+
+    if (confirm(`¿Estás seguro de que deseas cancelar la cita ID ${citaId}?`)) {
+        console.log(`CONFIRMAR_ELIMINAR: Usuario confirmó cancelación para cita ID ${citaId}.`);
+        try {
+            const response = await fetch(`${URL_CITAS_API}${citaId}/`, {
+                method: 'PATCH', 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({ estado: 'CANCELADA' }) // Cambiamos el estado
+            });
+
+            console.log(`CONFIRMAR_ELIMINAR: Respuesta del PATCH para cancelar:`, response);
+
+            if (response.ok) {
+                alert("Cita cancelada exitosamente.");
+                cargarCitas(document.getElementById('filtro-estado').value); // Recargar la tabla
+            } else {
+                const errorData = await response.json();
+                console.error(`CONFIRMAR_ELIMINAR: Error del API al cancelar:`, errorData);
+                let errMsg = "Error al cancelar la cita. ";
+                for (const key in errorData) {
+                     if (errorData.hasOwnProperty(key)) {
+                        const errorMessages = Array.isArray(errorData[key]) ? errorData[key].join(', ') : errorData[key];
+                        errMsg += `${key === 'non_field_errors' ? '' : key + ': '}${errorMessages} `;
+                    }
+                }
+                alert(errMsg.trim());
+            }
+        } catch (error) {
+            console.error("CONFIRMAR_ELIMINAR: Error de red al intentar cancelar cita:", error);
+            alert("Error de red al intentar cancelar la cita.");
+        }
+    } else {
+        console.log(`CONFIRMAR_ELIMINAR: Usuario NO confirmó cancelación para cita ID ${citaId}.`);
+    }
+}
+
+    document.getElementById('btn-aplicar-filtro').addEventListener('click', () => {
+        const estadoSeleccionado = document.getElementById('filtro-estado').value;
+        cargarCitas(estadoSeleccionado);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM completamente cargado. Cargando citas iniciales...");
+        cargarCitas(); 
+        // No inicializamos el calendario modal aquí, se hace cuando se abre el modal.
+        const btnGuardarModal = document.getElementById('btn-guardar-modificacion-cita');
+    if (btnGuardarModal) {
+        console.log("Asignando event listener a #btn-guardar-modificacion-cita.");
+        btnGuardarModal.addEventListener('click', guardarModificacionCita);
+    } else {
+        console.error("Botón #btn-guardar-modificacion-cita no encontrado en el DOM al cargar.");
+    }
+    });
+  </script>
+</body>
+</html>

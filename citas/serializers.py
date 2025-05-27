@@ -9,9 +9,23 @@ class PacienteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class MedicoSerializer(serializers.ModelSerializer):
+    nombre = serializers.SerializerMethodField(read_only=True)
+    apellido = serializers.SerializerMethodField(read_only=True)
+    especialidad = serializers.CharField(source='especialidad_texto', read_only=True) # Mapea a especialidad_texto
+    id_med = serializers.IntegerField(source='id', read_only=True) # El JS usa id_med
+
     class Meta:
         model = Medico
-        fields = '__all__'
+        fields = ['id_med', 'nombre_completo', 'nombre', 'apellido', 'especialidad'] # Asegúrate que 'id' se mapea a 'id_med' para el JS
+
+    def get_nombre(self, obj):
+        parts = obj.nombre_completo.split(' ', 1)
+        return parts[0] if parts else obj.nombre_completo
+
+    def get_apellido(self, obj):
+        parts = obj.nombre_completo.split(' ', 1)
+        return parts[1] if len(parts) > 1 else ''
+
 
 class HistorialCitaSerializer(serializers.ModelSerializer): 
     class Meta:
@@ -20,18 +34,21 @@ class HistorialCitaSerializer(serializers.ModelSerializer):
 
 class CitaSerializer(serializers.ModelSerializer):
     medico_nombre = serializers.CharField(source='medico.nombre_completo', read_only=True)
+    estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    pro_veri_cita_display = serializers.CharField(source='get_pro_veri_cita_display', read_only=True)
+    medico_id_val = serializers.IntegerField(source='medico.id', read_only=True)
 
     class Meta:
         model = Cita
         # ... (tus fields y extra_kwargs como antes) ...
         fields = [
-            'id', 'nombre_paciente_temporal', 'estado', 'pro_veri_cita',
-            'fecha_hora_cita', 'medico', 'medico_nombre', 'historial_cita',
+            'id', 'nombre_paciente_temporal', 'estado','estado_display', 'pro_veri_cita','pro_veri_cita_display',
+            'fecha_hora_cita', 'medico','medico_id_val', 'medico_nombre', 'historial_cita',
             'duracion_minutos', 'motivo', 'creado_en', 'actualizado_en',
         ]
         read_only_fields = ['creado_en', 'actualizado_en']
         extra_kwargs = {
-            'medico': {'write_only': True}
+            'medico': {'write_only': True,'required': True}
         }
 
     def validate_fecha_hora_cita(self, value):
